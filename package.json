@@ -1,6 +1,6 @@
 {
 	"name": "@abyssbugg/task-manager",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Model Context Protocol server for Task Management",
 	"author": "abyssbugg",
 	"main": "dist/index.js",
@@ -13,9 +13,12 @@
 	],
 	"scripts": {
 		"dev": "bun run index.ts",
-		"build": "bun run tsc && bun run shx chmod +x dist/*.js",
+		"build": "bun run tsc && chmod +x dist/*.js",
 		"prepare": "bun run build",
-		"watch": "bun run tsc --watch"
+		"watch": "bun run tsc --watch",
+		"typecheck": "bun run tsc -noEmit",
+		"lint": "bunx biome check .",
+		"format": "bunx biome format ."
 	},
 	"repository": {
 		"type": "git",
@@ -32,15 +35,10 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "0.5.0",
-		"chalk": "^5.3.0",
-		"glob": "^10.3.10",
-		"zod": "^3.23.8",
-		"zod-to-json-schema": "^3.23.5"
+		"zod": "^3.23.8"
 	},
 	"devDependencies": {
-		"@types/json-schema": "^7.0.15",
 		"@types/node": "^20.11.0",
-		"shx": "^0.3.4",
 		"typescript": "^5.3.3"
 	}
 }

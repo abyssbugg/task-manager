@@ -2,34 +2,49 @@
 
 A small Model Context Protocol (MCP) server that manages a simple `tasks.json` file.
 
-## Install
+## Quick Start
 
-- Using Bun: `bunx @abyssbugg/task-manager --tasks-file ~/Documents/tasks.json`
-- Using NPX: `npx @abyssbugg/task-manager --tasks-file ~/Documents/tasks.json`
-
-## Usage
-
-- Provide the tasks file via environment variable:
+- Run with Bun (recommended):
 
 ```
-TASK_MANAGER_FILE_PATH=/Users/you/Documents/tasks.json task-manager
+bunx @abyssbugg/task-manager --tasks-file ~/Documents/tasks.json
 ```
 
-- Or via CLI flag:
+- Or set the path via env (defaults to `~/Documents/tasks.json` if omitted):
 
 ```
-task-manager --tasks-file /Users/you/Documents/tasks.json
+TASK_MANAGER_FILE_PATH=/Users/you/Documents/tasks.json bunx @abyssbugg/task-manager
 ```
 
-## MCP Config Example
+- Using npx is acceptable if Bun is installed (the binary uses a Bun shebang):
 
-Add an entry to your `~/.cursor/mcp.json` to run the server locally:
+```
+npx -y @abyssbugg/task-manager --tasks-file ~/Documents/tasks.json
+```
 
+## MCP Config Examples
+
+For generic MCP clients (`~/.mcp/servers.json`):
+
+```
+{
+  "mcpServers": {
+    "task-manager": {
+      "command": "bunx",
+      "args": ["@abyssbugg/task-manager", "--tasks-file", "/Users/you/Documents/tasks.json"]
+    }
+  }
+}
+```
+
+For Cursor (`~/.cursor/mcp.json`):
+
+```
 {
   "task-manager": {
-    "command": "bun",
-    "args": ["/Users/you/Documents/mcp-taskmanager/dist/index.js"],
-    "env": {"TASK_MANAGER_FILE_PATH": "/Users/you/Documents/tasks.json"},
+    "command": "bunx",
+    "args": ["@abyssbugg/task-manager", "--tasks-file", "/Users/you/Documents/tasks.json"],
     "working_directory": "/Users/you/Documents"
   }
 }
+```
