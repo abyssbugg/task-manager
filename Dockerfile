@@ -10,5 +10,7 @@ COPY src ./src
 RUN bun install && bun run build
 
 # Default command
+ENV MCP_TRANSPORT=http
+ENV PORT=3000
+EXPOSE 3000
 CMD ["bun", "dist/index.js"]
-

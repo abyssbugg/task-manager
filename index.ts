@@ -7,6 +7,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as os from "node:os";
 import { z } from "zod";
+import * as http from "node:http";
 import { TaskManagerFile, TaskManagerFileSchema, RequestEntry, Task } from "./src/domain/schema.js";
 import { loadTaskManagerFile, saveTaskManagerFileAtomic } from "./src/storage/fileStorage.js";
 
@@ -694,174 +695,104 @@ const server = new Server(
 
 const taskManagerServer = new TaskManagerServer();
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    REQUEST_PLANNING_TOOL,
-    GET_NEXT_TASK_TOOL,
-    MARK_TASK_DONE_TOOL,
-    APPROVE_TASK_COMPLETION_TOOL,
-    APPROVE_REQUEST_COMPLETION_TOOL,
-    OPEN_TASK_DETAILS_TOOL,
-    LIST_REQUESTS_TOOL,
-    ADD_TASKS_TO_REQUEST_TOOL,
-    UPDATE_TASK_TOOL,
-    DELETE_TASK_TOOL,
-  ],
-}));
+const ALL_TOOLS: Tool[] = [
+  REQUEST_PLANNING_TOOL,
+  GET_NEXT_TASK_TOOL,
+  MARK_TASK_DONE_TOOL,
+  APPROVE_TASK_COMPLETION_TOOL,
+  APPROVE_REQUEST_COMPLETION_TOOL,
+  OPEN_TASK_DETAILS_TOOL,
+  LIST_REQUESTS_TOOL,
+  ADD_TASKS_TO_REQUEST_TOOL,
+  UPDATE_TASK_TOOL,
+  DELETE_TASK_TOOL,
+];
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: ALL_TOOLS }));
+
+async function handleToolCallByName(name: string, args: unknown) {
   try {
-    const { name, arguments: args } = request.params;
-
     switch (name) {
       case "request_planning": {
         const parsed = RequestPlanningSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { originalRequest, tasks, splitDetails } = parsed.data;
-        const result = await taskManagerServer.requestPlanning(
-          originalRequest,
-          tasks,
-          splitDetails
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        const result = await taskManagerServer.requestPlanning(originalRequest, tasks, splitDetails);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "get_next_task": {
         const parsed = GetNextTaskSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
-        const result = await taskManagerServer.getNextTask(
-          parsed.data.requestId
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
+        const result = await taskManagerServer.getNextTask(parsed.data.requestId);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "mark_task_done": {
         const parsed = MarkTaskDoneSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { requestId, taskId, completedDetails } = parsed.data;
-        const result = await taskManagerServer.markTaskDone(
-          requestId,
-          taskId,
-          completedDetails
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        const result = await taskManagerServer.markTaskDone(requestId, taskId, completedDetails);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "approve_task_completion": {
         const parsed = ApproveTaskCompletionSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { requestId, taskId } = parsed.data;
-        const result = await taskManagerServer.approveTaskCompletion(
-          requestId,
-          taskId
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        const result = await taskManagerServer.approveTaskCompletion(requestId, taskId);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "approve_request_completion": {
         const parsed = ApproveRequestCompletionSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { requestId } = parsed.data;
-        const result =
-          await taskManagerServer.approveRequestCompletion(requestId);
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        const result = await taskManagerServer.approveRequestCompletion(requestId);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "open_task_details": {
         const parsed = OpenTaskDetailsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { taskId } = parsed.data;
         const result = await taskManagerServer.openTaskDetails(taskId);
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "list_requests": {
         const parsed = ListRequestsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const result = await taskManagerServer.listRequests();
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "add_tasks_to_request": {
         const parsed = AddTasksToRequestSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { requestId, tasks } = parsed.data;
-        const result = await taskManagerServer.addTasksToRequest(
-          requestId,
-          tasks
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        const result = await taskManagerServer.addTasksToRequest(requestId, tasks);
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "update_task": {
         const parsed = UpdateTaskSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { requestId, taskId, title, description } = parsed.data;
-        const result = await taskManagerServer.updateTask(requestId, taskId, {
-          title,
-          description,
-        });
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        const result = await taskManagerServer.updateTask(requestId, taskId, { title, description });
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       case "delete_task": {
         const parsed = DeleteTaskSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments: ${parsed.error}`);
-        }
+        if (!parsed.success) throw new Error(`Invalid arguments: ${parsed.error}`);
         const { requestId, taskId } = parsed.data;
         const result = await taskManagerServer.deleteTask(requestId, taskId);
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
-
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [{ type: "text", text: `Error: ${errorMessage}` }],
-      isError: true,
-    };
+    return { content: [{ type: "text", text: `Error: ${errorMessage}` }], isError: true };
   }
+}
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+  return handleToolCallByName(name, args);
 });
 
 async function runServer() {
@@ -872,7 +803,62 @@ async function runServer() {
   );
 }
 
-runServer().catch((error) => {
-  console.error("Fatal error running server:", error);
-  process.exit(1);
-});
+function startHttpServer() {
+  const port = Number(process.env.PORT || 3000);
+  const srv = http.createServer(async (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "content-type");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    try {
+      if (req.method === "GET" && req.url === "/health") {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (req.method === "GET" && req.url === "/tools") {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ tools: ALL_TOOLS }));
+        return;
+      }
+      if (req.method === "POST" && req.url === "/call") {
+        const chunks: Buffer[] = [];
+        for await (const chunk of req) chunks.push(chunk as Buffer);
+        const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString("utf-8")) : {};
+        const { name, arguments: args } = body || {};
+        if (!name) {
+          res.writeHead(400, { "content-type": "application/json" });
+          res.end(JSON.stringify({ error: "Missing 'name' in body" }));
+          return;
+        }
+        const result = await handleToolCallByName(String(name), args);
+        res.writeHead(result.isError ? 400 : 200, { "content-type": "application/json" });
+        res.end(JSON.stringify(result));
+        return;
+      }
+      res.writeHead(404, { "content-type": "application/json" });
+      res.end(JSON.stringify({ error: "Not found" }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.writeHead(500, { "content-type": "application/json" });
+      res.end(JSON.stringify({ error: msg }));
+    }
+  });
+  srv.listen(port, "0.0.0.0", () => {
+    console.error(`Task Manager MCP HTTP server on port ${port}. Saving tasks at: ${TASK_FILE_PATH}`);
+  });
+}
+
+if (process.env.MCP_TRANSPORT === "http") {
+  startHttpServer();
+} else {
+  runServer().catch((error) => {
+    console.error("Fatal error running server:", error);
+    process.exit(1);
+  });
+}

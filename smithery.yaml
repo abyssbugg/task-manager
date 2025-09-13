@@ -1,0 +1,10 @@
+build:
+  install: bun install
+  command: bun run build
+server:
+  command: bun
+  args:
+    - dist/index.js
+  env:
+    MCP_TRANSPORT: http
+    PORT: "3000"
