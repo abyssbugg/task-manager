@@ -48,3 +48,21 @@ For Cursor (`~/.cursor/mcp.json`):
   }
 }
 ```
+
+## HTTP Mode (for Smithery or custom hosting)
+
+- The server can run over HTTP when `MCP_TRANSPORT=http`.
+- Endpoints:
+  - `GET /health` → `{ ok: true }`
+  - `GET /tools` → JSON tool list
+  - `POST /call` → Body: `{ "name": "tool_name", "arguments": { ... } }`
+
+Run locally in HTTP mode with Bun:
+
+```
+MCP_TRANSPORT=http PORT=3000 bun run dev
+# then in another terminal
+curl http://localhost:3000/health
+curl http://localhost:3000/tools
+curl -X POST http://localhost:3000/call -H 'content-type: application/json' -d '{"name":"list_requests","arguments":{}}'
+```
