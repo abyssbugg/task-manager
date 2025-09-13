@@ -1,6 +1,6 @@
 {
-	"name": "@abyssbugg/task-manager",
-	"version": "1.0.3",
+	"name": "@abyssbug/task-manager",
+	"version": "1.0.4",
 	"description": "Model Context Protocol server for Task Management",
 	"author": "abyssbugg",
 	"main": "dist/index.js",
