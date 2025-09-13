@@ -1,2 +1,5 @@
-dist
 node_modules
+dist
+bun.lockb
+.pnpm-debug.log
+.env

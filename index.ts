@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -14,7 +14,19 @@ import * as os from "node:os";
 import { z } from "zod";
 
 const DEFAULT_PATH = path.join(os.homedir(), "Documents", "tasks.json");
-const TASK_FILE_PATH = process.env.TASK_MANAGER_FILE_PATH || DEFAULT_PATH;
+
+// CLI support: --tasks-file <path>
+const rawArgs = process.argv.slice(2);
+let cliTasksFile: string | undefined = undefined;
+for (let i = 0; i < rawArgs.length; i++) {
+  const a = rawArgs[i];
+  if (a === "--tasks-file" || a === "--tasks-file-path" || a === "--tasks") {
+    cliTasksFile = rawArgs[i + 1];
+    break;
+  }
+}
+
+const TASK_FILE_PATH = process.env.TASK_MANAGER_FILE_PATH || cliTasksFile || DEFAULT_PATH;
 
 interface Task {
   id: string;

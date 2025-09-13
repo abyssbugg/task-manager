@@ -1,25 +1,24 @@
 {
-	"name": "@abyssbugg/task-manager",
+	"name": "@kazuph/mcp-taskmanager",
 	"version": "1.0.2",
 	"description": "Model Context Protocol server for Task Management",
-	"author": "abyssbugg",
+	"author": "kazuph (https://x.com/kazuph)",
 	"main": "dist/index.js",
 	"type": "module",
 	"bin": {
-		"task-manager": "dist/index.js"
+		"mcp-taskmanager": "dist/index.js"
 	},
 	"files": [
 		"dist"
 	],
 	"scripts": {
-		"dev": "bun run index.ts",
-		"build": "bun run tsc && bun run shx chmod +x dist/*.js",
-		"prepare": "bun run build",
-		"watch": "bun run tsc --watch"
+		"build": "tsc && shx chmod +x dist/*.js",
+		"prepare": "npm run build",
+		"watch": "tsc --watch"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/abyssbugg/task-manager.git"
+		"url": "git+https://github.com/kazuph/mcp-taskmanager.git"
 	},
 	"keywords": [
 		"taskmanager",
